@@ -33,7 +33,7 @@ namespace ChatUST.API.Convert.Controllers
                 return (JsonConvert.SerializeObject(new { Fail = "Error Key" }));
             }
 
-            //Ô¤´¦Àí
+            //é¢„å¤„ç†
             ChatGPT.API.HKUST.Completions hkustcomp = new ChatGPT.API.HKUST.Completions()
             {
                 frequency_penalty = completion.frequency_penalty,
@@ -52,14 +52,14 @@ namespace ChatUST.API.Convert.Controllers
             try
             {
                 resp = hkustcomp.GetResponse(
-                    $"https://hkust.azure-api.net/openai/deployments/{completion.model.ToLower()}/chat/completions?api-version=2024-06-01",
+                    $"https://hkust.azure-api.net/openai/deployments/{completion.model.ToLower()}/chat/completions?api-version=2025-02-01-preview",
                     key);
             }
             catch (Exception ex)
             {
                 return JsonConvert.SerializeObject(new { Fail = ex.ToString() });
             }
-            if (resp == null)//Éú³ÉÊ§°Ü
+            if (resp == null)//ç”Ÿæˆå¤±è´¥
             {
                 return (JsonConvert.SerializeObject(new { Fail = "EmptyResponse" }));
             }
@@ -87,7 +87,7 @@ namespace ChatUST.API.Convert.Controllers
                 return;
             }
 
-            //Ô¤´¦Àí
+            //é¢„å¤„ç†
             ChatGPT.API.HKUST.Completions hkustcomp = new ChatGPT.API.HKUST.Completions()
             {
                 frequency_penalty = completion.frequency_penalty,
@@ -114,13 +114,27 @@ namespace ChatUST.API.Convert.Controllers
                 await HttpContext.Response.WriteAsync(JsonConvert.SerializeObject(new { Fail = ex.ToString() }));
                 return;
             }
-            if (resp == null)//Éú³ÉÊ§°Ü
+            if (resp == null)//ç”Ÿæˆå¤±è´¥
             {
                 await HttpContext.Response.WriteAsync(JsonConvert.SerializeObject(new { Fail = "EmptyResponse" }));
                 return;
             }
             await HttpContext.Response.WriteAsync(JsonConvert.SerializeObject(resp));
             return;
+        }
+
+        [HttpPost("auto/v1/chat/completions")]
+        public async Task AutoCompletions([FromBody] ChatGPT.API.Framework.Completions completion)
+        {
+            if (completion.messages.Last()?.content.Contains("ä½¿ç”¨å››åˆ°äº”ä¸ªå­—ç›´æ¥è¿”å›è¿™å¥è¯çš„ç®€è¦ä¸»é¢˜") == true)
+            {
+                completion.model = "gpt-4o-mini";
+                await GPTCompletions(completion);
+            }
+            else
+            {
+                await HttpContext.Response.WriteAsync(RAWCompletions(completion));
+            }
         }
     }
 }
